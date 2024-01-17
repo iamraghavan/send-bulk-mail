@@ -173,7 +173,7 @@ app.post('/send-bulk-emails', async (req, res) => {
       }
     }
 
-    res.status(200).send('Emails sent successfully');
+    res.status(200).send('Request for donors sent; if available, they will reach out to you');
   } catch (error) {
     console.error('Error sending bulk emails:', error);
     res.status(500).send('Internal server error');
