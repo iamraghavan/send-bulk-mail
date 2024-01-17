@@ -74,7 +74,7 @@ app.post('/send-bulk-emails', async (req, res) => {
         const mailOptions = {
           from: 'noreply@kurudhi.com', // Replace with your Gmail email
           to: email,
-          subject: 'Blood Request Notification',
+          subject: 'Blood Request Notification From Kurudhi.com',
           html: `<!DOCTYPE html>
           <html lang="en">
           
