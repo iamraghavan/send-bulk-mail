@@ -1,11 +1,13 @@
-// Import necessary modules
 const express = require('express');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const { getDatabase, ref, child, get } = require('firebase/database');
 const { initializeApp } = require('firebase/app');
+const cors = require('cors');
 
-const cors = require('cors'); 
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
 
 // Initialize Firebase app
 const firebaseConfig = {
@@ -21,40 +23,26 @@ const firebaseConfig = {
 
 // Initialize Firebase app
 const firebaseApp = initializeApp(firebaseConfig);
-
-// Express setup
-const app = express();
-
-// Use CORS middleware
-app.use(cors());
-
-app.use(bodyParser.json());
+const db = getDatabase(firebaseApp);
+const usersRef = ref(db, 'users'); // Adjust this if your data is stored in a different node
 
 // Send bulk emails route
 app.post('/send-bulk-emails', async (req, res) => {
 
-    const {
-        AttenderName,
-        patentName,
-        AttePhoneNumber,
-       
-        Unit,
-        bloodRequiredDate,
-        inputValue,
-      } = req.body;
-
-      
+  const {
+    AttenderName,
+    patentName,
+    AttePhoneNumber,
+   
+    Unit,
+    bloodRequiredDate,
+    inputValue,
+  } = req.body;
 
   try {
-    // Firebase database setup
-    const db = getDatabase(firebaseApp);
-    const usersRef = ref(db, 'users'); // Adjust this if your data is stored in a different node
-
-    // Fetch user data from Firebase
+    const { city, bloodGroup } = req.body;
     const snapshot = await get(usersRef);
     const users = snapshot.val();
-
-    // Nodemailer setup
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -63,14 +51,11 @@ app.post('/send-bulk-emails', async (req, res) => {
       },
     });
 
-    // Iterate over users and send emails based on conditions (blood group and location)
     for (const userId in users) {
       const user = users[userId];
-      const { fullName,
-        city, bloodGroup, email } = user;
+      const { fullName, city: userCity, bloodGroup: userBloodGroup, email } = user;
 
-      // Adjust the condition based on your logic (e.g., send emails only to specific blood groups in a specific location)
-      if (city === req.body.city && bloodGroup === req.body.bloodGroup) {
+      if (userCity === city && userBloodGroup === bloodGroup) {
         const mailOptions = {
           from: 'noreply@kurudhi.com', // Replace with your Gmail email
           to: email,
@@ -173,15 +158,44 @@ app.post('/send-bulk-emails', async (req, res) => {
       }
     }
 
-    res.status(200).send('Request for donors sent; if available, they will reach out to you');
+    res.status(200).send('Blood request notifications sent successfully');
   } catch (error) {
     console.error('Error sending bulk emails:', error);
     res.status(500).send('Internal server error');
   }
 });
 
-// Start the server
+
+app.post('/sendMail', async (req, res) => {
+  try {
+    const { userEmail, subject, message } = req.body;
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'kurudhiofficial@gmail.com',
+        pass: 'vutf jrjw bnpc jire',
+      },
+    });
+
+    const mailOptions = {
+      from: 'noreply@kurudhi.com',
+      to: userEmail,
+      subject: subject || 'Login Successful', // Using provided subject or a default one
+      html: message,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).send('Email sent successfully');
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).send('Internal server error');
+  }
+});
+
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
