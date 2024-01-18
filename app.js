@@ -180,7 +180,7 @@ app.post('/sendMail', async (req, res) => {
     const mailOptions = {
       from: 'noreply@kurudhi.com',
       to: userEmail,
-      subject: subject || 'Login Successful', // Using provided subject or a default one
+      subject: subject || '[🔐 Security Alert] Successful Login to Your Kurudhi.com Profile', // Using provided subject or a default one
       html: message,
     };
 
